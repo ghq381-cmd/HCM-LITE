@@ -1,141 +1,94 @@
-
-const setupForm = document.getElementById("setupForm");
-const loginForm = document.getElementById("loginForm");
-const message = document.getElementById("message");
-
-function showMessage(text, type = "") {
-  message.textContent = text;
-  message.className = type;
-}
-
-// Already logged in? Go straight to the right dashboard.
-(function () {
-  const active = Storage.get("hcm_session");
-  const users = Storage.get("hcm_users", []);
-
-  if (active && users.some(user => user.id === active.userId)) {
-    window.location.replace(active.role === "admin" ? "admin.html" : "employee.html");
+(() => {
+  const $ = id => document.getElementById(id);
+  const formLogin = $('loginForm');
+  const formSetup = $('setupForm');
+  const message = $('message');
+  const users = () => Storage.get('hcm_users', []);
+  const company = () => Storage.get('hcm_company');
+  const show = (text, type = 'error') => {
+    if (!message) return;
+    message.textContent = text;
+    message.className = type;
+  };
+  const current = Storage.get('hcm_session');
+  if (current) {
+    const user = users().find(u => String(u.id) === String(current.userId) && u.role === current.role);
+    if (user) {
+      location.replace(user.role === 'admin' ? 'admin.html' : 'employee.html');
+      return;
+    }
+    Storage.remove('hcm_session');
+  }
+  if (formSetup) {
+    const role = $('accountType');
+    function syncRole() {
+      const isAdmin = role.value === 'admin';
+      $('adminFields').hidden = !isAdmin;
+      $('companyName').required = isAdmin;
+      $('employeeInfo').hidden = isAdmin;
+      $('nameLabel').textContent = isAdmin ? 'Admin full name' : 'Employee full name';
+      $('emailLabel').textContent = isAdmin ? 'Admin email address' : 'Employee email address';
+      show('', '');
+    }
+    role.addEventListener('change', syncRole);
+    syncRole();
+    formSetup.addEventListener('submit', event => {
+      event.preventDefault();
+      const type = role.value;
+      const name = $('adminName').value.trim();
+      const email = $('adminEmail').value.trim().toLowerCase();
+      const password = $('adminPassword').value;
+      const companyName = $('companyName').value.trim();
+      if (!name || !email || password.length < 6 || (type === 'admin' && !companyName)) {
+        show('Please fill out all required fields. Password must be at least 6 characters.'); return;
+      }
+      const existingCompany = company();
+      const savedUsers = users();
+      if (savedUsers.some(u => String(u.email).toLowerCase() === email)) {
+        show('An account with this email already exists.'); return;
+      }
+      if (type === 'admin' && (existingCompany || savedUsers.length)) {
+        show('A company has already been created in this browser. Please sign in with your admin account.'); return;
+      }
+      if (type === 'employee' && !existingCompany) {
+        show('No company exists yet. Please create an Admin Account first.'); return;
+      }
+      const account = {
+        id: Date.now() + Math.floor(Math.random() * 10000), name, email, role: type,
+        department: type === 'admin' ? 'Management' : 'General',
+        salary: 0, payMethod: 'cheque', bankName: '', accountNo: ''
+      };
+      Auth.setPassword(account, password);
+      if (type === 'admin') {
+        Storage.set('hcm_company', {
+          name: companyName, officeStart: '09:00', graceMinutes: 15,
+          leaveQuota: 20, latesPerDeduction: 0, workingDays: [1, 2, 3, 4, 5]
+        });
+        for (const key of ['hcm_attendance','hcm_leaves','hcm_holidays','hcm_payments']) {
+          if (!Storage.get(key)) Storage.set(key, []);
+        }
+      }
+      Storage.set('hcm_users', [...savedUsers, account]);
+      formSetup.reset();
+      show('Account created! You can now sign in.', 'success');
+      setTimeout(() => { location.href = 'index.html'; }, 850);
+    });
+  }
+  if (formLogin) {
+    formLogin.addEventListener('submit', event => {
+      event.preventDefault();
+      const email = $('email').value.trim().toLowerCase();
+      const password = $('password').value;
+      const type = $('loginRole').value;
+      const list = users();
+      const account = list.find(u => String(u.email).toLowerCase() === email && u.role === type && Auth.verify(u, password));
+      if (!account) { show('Incorrect email, password, or account type.'); return; }
+      if (account.password) {
+        Auth.setPassword(account, password);
+        Storage.set('hcm_users', list);
+      }
+      Storage.set('hcm_session', { userId: account.id, role: account.role });
+      location.href = account.role === 'admin' ? 'admin.html' : 'employee.html';
+    });
   }
 })();
-
-function initializeApp() {
-  const company = Storage.get("hcm_company");
-  const users = Storage.get("hcm_users", []);
-
-  if (!company || users.length === 0) {
-    setupForm.classList.remove("hidden");
-    loginForm.classList.add("hidden");
-  } else {
-    setupForm.classList.add("hidden");
-    loginForm.classList.remove("hidden");
-  }
-}
-
-// First-time company setup
-setupForm.addEventListener("submit", function (event) {
-  event.preventDefault();
-
-  const companyName =
-    document.getElementById("companyName").value.trim();
-
-  const adminName =
-    document.getElementById("adminName").value.trim();
-
-  const adminEmail =
-    document.getElementById("adminEmail").value.trim().toLowerCase();
-
-  const adminPassword =
-    document.getElementById("adminPassword").value;
-
-  if (!companyName || !adminName || !adminEmail || !adminPassword) {
-    showMessage("Please complete every field.", "error");
-    return;
-  }
-
-  if (adminPassword.length < 6) {
-    showMessage("Password must be at least 6 characters.", "error");
-    return;
-  }
-
-  const users = Storage.get("hcm_users", []);
-
-  if (users.some(user => user.email === adminEmail)) {
-    showMessage("This email is already registered.", "error");
-    return;
-  }
-
-  const admin = {
-    id: Date.now(),
-    name: adminName,
-    email: adminEmail,
-    role: "admin",
-    department: "Management",
-    salary: 0
-  };
-
-  Auth.setPassword(admin, adminPassword);
-
-  Storage.set("hcm_company", {
-    name: companyName,
-    officeStart: "09:00",
-    graceMinutes: 15,
-    leaveQuota: 20,
-    latesPerDeduction: 0,
-    workingDays: [1, 2, 3, 4, 5]
-  });
-
-  Storage.set("hcm_users", [...users, admin]);
-  Storage.set("hcm_attendance", []);
-  Storage.set("hcm_leaves", []);
-  Storage.set("hcm_holidays", []);
-  Storage.set("hcm_payments", []);
-
-  setupForm.reset();
-  initializeApp();
-
-  showMessage(
-    "Company created successfully! Please log in.",
-    "success"
-  );
-});
-
-// Login for Admin or Employee
-loginForm.addEventListener("submit", function (event) {
-  event.preventDefault();
-
-  const email =
-    document.getElementById("email").value.trim().toLowerCase();
-
-  const password =
-    document.getElementById("password").value;
-
-  const users = Storage.get("hcm_users", []);
-
-  const user = users.find(
-    item => item.email === email && Auth.verify(item, password)
-  );
-
-  if (!user) {
-    showMessage("Invalid email or password.", "error");
-    return;
-  }
-
-  // Upgrade old plain-text passwords to hashed ones.
-  if (user.password) {
-    Auth.setPassword(user, password);
-    Storage.set("hcm_users", users);
-  }
-
-  Storage.set("hcm_session", {
-    userId: user.id,
-    role: user.role
-  });
-
-  if (user.role === "admin") {
-    window.location.href = "admin.html";
-  } else {
-    window.location.href = "employee.html";
-  }
-});
-
-initializeApp();
