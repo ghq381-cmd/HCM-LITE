@@ -1,53 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HCM Lite | HR Management</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Sign In | HCM Lite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <main class="container center">
-    <section class="auth-card">
-      <div class="logo">HCM</div>
-      <h1>HCM Lite</h1>
-      <p class="subtitle">Human Capital Management System</p>
 
-      <form id="setupForm" class="hidden">
-        <h2>First-time Company Setup</h2>
-
-        <label for="companyName">Company name</label>
-        <input id="companyName" required placeholder="Enter company name">
-
-        <label for="adminName">Admin full name</label>
-        <input id="adminName" required placeholder="Enter your name">
-
-        <label for="adminEmail">Admin email</label>
-        <input id="adminEmail" type="email" required placeholder="admin@example.com">
-
-        <label for="adminPassword">Password</label>
-        <input id="adminPassword" type="password" minlength="6" required>
-
-        <button type="submit">Create Company</button>
-      </form>
-
-      <form id="loginForm" class="hidden">
-        <h2>Welcome Back</h2>
-
-        <label for="email">Email address</label>
-        <input id="email" type="email" required placeholder="Enter email">
-
-        <label for="password">Password</label>
-        <input id="password" type="password" required placeholder="Enter password">
-
-        <button type="submit">Login</button>
-      </form>
-
-      <p id="message" role="status"></p>
-    </section>
-  </main>
-
-  <script src="storage.js"></script>
-  <script src="app.js"></script>
+<body class="auth-page">
+    <main class="auth-layout">
+        <aside class="auth-intro">
+            <div class="brand-mark"><span class="brand-icon">H</span> HCM <span class="brand-light">Lite</span></div>
+            <div class="eyebrow"><span class="live-dot"></span> WORKFORCE MANAGEMENT MADE SIMPLE</div>
+            <h1>Great teams start with <em>better management.</em></h1>
+            <p>Manage your people, attendance, leave requests and payroll—all in one place.</p>
+            <div class="feature-list">
+                <div><span>✓</span> Employee & attendance tracking</div>
+                <div><span>✓</span> Leave & payroll management</div>
+                <div><span>✓</span> Organized reports and records</div>
+            </div>
+            <div class="auth-foot">HCM Lite · Simple HR management for your team</div>
+        </aside>
+        <section class="auth-panel">
+            <div class="auth-card">
+                <div class="mobile-brand">HCM <span>Lite</span></div>
+                <div class="auth-eyebrow">WELCOME BACK</div>
+                <h2>Sign in to your account</h2>
+                <p class="subtitle">Enter your details to continue to your dashboard.</p>
+                <form id="loginForm"><label for="email">Email address</label><input id="email" type="email"
+                        autocomplete="username" placeholder="you@company.com" required><label
+                        for="password">Password</label><input id="password" type="password"
+                        autocomplete="current-password" placeholder="Enter your password" required><label
+                        for="loginRole">Account type</label>
+                    <div class="select-holder"><select id="loginRole" required>
+                            <option value="admin">Admin Account</option>
+                            <option value="employee">Employee Account</option>
+                        </select></div><button type="submit" class="primary-action">Sign in <span
+                            aria-hidden="true">→</span></button>
+                </form>
+                <p id="message" role="status" aria-live="polite"></p>
+                <div class="auth-divider"><span>NEW TO HCM LITE?</span></div>
+                <p class="auth-switch">Don't have an account? <a href="signup.html">Create an account →</a></p>
+            </div>
+        </section>
+    </main>
+    <script src="storage.js"></script>
+    <script src="app.js"></script>
 </body>
+
 </html>
