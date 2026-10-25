@@ -1,4 +1,7 @@
-const today = new Date().toLocaleDateString("en-CA");
+const today = (() => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+})();
 const session = Storage.get("hcm_session");
 const allUsers = Storage.get("hcm_users", []);
 
@@ -74,7 +77,7 @@ if (document.getElementById("employeeForm") && requireRole("admin")) {
 
     const employees = getEmployees().filter(user =>
       [user.name, user.email, user.department]
-        .some(value => value.toLowerCase().includes(query))
+        .some(value => String(value ?? "").toLowerCase().includes(query))
     );
 
     employeeList.replaceChildren();
@@ -235,7 +238,7 @@ if (document.getElementById("employeeForm") && requireRole("admin")) {
       if (password) Auth.setPassword(employee, password);
       adminMessage.textContent = "Employee updated.";
     } else {
-      const employee = { id: Date.now(), role: "employee", ...details };
+      const employee = { id: Date.now(), role: "employee", joined: today, ...details };
       Auth.setPassword(employee, password);
       users.push(employee);
       adminMessage.textContent =
