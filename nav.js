@@ -49,3 +49,4 @@
   bar.append(inner);
   host.replaceChildren(bar);
 })();
+
