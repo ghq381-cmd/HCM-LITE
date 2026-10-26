@@ -50,7 +50,7 @@
       const r = P.calculate(user, month, ctx);
       const paid = payments.find(p => p.employeeId === user.id && p.month === month);
       const method = P.payMethod(user);
-      totalSalary += user.salary;
+      totalSalary += Number(user.salary || 0);
       totalNet += r.net;
 
       const tr = document.createElement("tr");
