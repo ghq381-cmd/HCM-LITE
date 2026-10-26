@@ -1,4 +1,3 @@
-
 (() => {
   const users = () => Storage.get("hcm_users", []);
   const leaves = () => Storage.get("hcm_leaves", []);
