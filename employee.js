@@ -84,6 +84,15 @@ if (
       return;
     }
 
+    const workDays = company.workingDays ?? [1, 2, 3, 4, 5];
+    const holiday = Storage.get("hcm_holidays", []).some(h => h.date === today);
+    const onLeave = Storage.get("hcm_leaves", []).some(l =>
+      l.employeeId === currentUser.id && l.status === "approved" && l.from <= today && l.to >= today);
+    if (!workDays.includes(new Date().getDay()) || holiday || onLeave) {
+      statusText.textContent = "Check-in is not available on a non-working day, holiday, or approved leave.";
+      return;
+    }
+
     const now = new Date();
     const time = now.toTimeString().slice(0, 5);
 
